@@ -23,9 +23,15 @@ repositories {
 dependencies {
   implementation group: 'trust.nccgroup', name: 'log4j-jndi-be-gone', version: '1.0.0'
 
+  if (project.hasProperty('java6')) {
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.3'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.3'
+  } else {
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+  }
+
   testImplementation group: 'junit', name: 'junit', version: '4.12'
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
-  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
 }
 
 sourceSets {

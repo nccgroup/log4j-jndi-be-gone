@@ -1,0 +1,80 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '7.1.0'
+  id 'java'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+repositories {
+  mavenLocal()
+
+  maven {
+    name = 'github'
+    //credentials(PasswordCredentials)
+    url = uri('https://maven.pkg.github.com/nccgroup/log4j-jndi-be-gone')
+  }
+
+  mavenCentral()
+}
+
+dependencies {
+  implementation group: 'trust.nccgroup', name: 'log4j-jndi-be-gone', version: '1.0.0'
+
+  testImplementation group: 'junit', name: 'junit', version: '4.12'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+  testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+}
+
+sourceSets {
+  main {
+    java {
+      srcDirs = ['./src']
+    }
+
+    resources {
+      srcDirs = ['./res']
+    }
+  }
+
+  test {
+    java {
+      srcDirs = ['./test/src']
+    }
+    resources {
+      srcDirs = ['./test/res']
+    }
+  }
+}
+
+jar {
+  manifest {
+    attributes (
+      "Manifest-Version": "1.0",
+      "Can-Redefine-Classes": "true",
+      "Can-Retransform-Classes": "true",
+      "Can-Set-Native-Method-Prefix": "true",
+      "Premain-Class": "trust.nccgroup.jndibegone.PreMain",
+      "Agent-Class": "trust.nccgroup.jndibegone.AgentMain"
+    )
+  }
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+task testJar(type: ShadowJar) {
+  classifier = 'tests'
+  from sourceSets.test.output
+  configurations = [project.configurations.testRuntimeClasspath]
+
+  manifest {
+    attributes (
+            "Manifest-Version": "1.0",
+            "Main-Class": "trust.nccgroup.jnditest.Main"
+    )
+  }
+
+}
+
+defaultTasks "shadowJar", "testJar"

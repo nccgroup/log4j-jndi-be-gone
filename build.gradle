@@ -1,0 +1,102 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '7.1.0'
+  id 'java'
+  id 'maven-publish'
+}
+
+group = 'trust.nccgroup'
+version = '1.0.0'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation group: 'net.bytebuddy', name: 'byte-buddy', version: '[1.12.0, 1.13)'
+}
+
+sourceSets {
+  main {
+    java {
+      srcDirs = ['./src']
+    }
+
+    resources {
+      srcDirs = ['./res']
+    }
+  }
+}
+
+jar {
+  manifest {
+    attributes (
+      "Manifest-Version": "1.0",
+      "Can-Redefine-Classes": "true",
+      "Can-Retransform-Classes": "true",
+      "Can-Set-Native-Method-Prefix": "true",
+      "Premain-Class": "trust.nccgroup.jndibegone.PreMain",
+      "Agent-Class": "trust.nccgroup.jndibegone.AgentMain"
+    )
+  }
+}
+
+
+compileJava {
+  options.compilerArgs << '-Xlint:unchecked'
+}
+
+task sourceJar(type: Jar) {
+  from sourceSets.main.allJava
+  classifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  classifier = 'javadoc'
+}
+
+artifacts {
+  archives javadocJar, sourceJar
+}
+
+shadowJar {
+  // removes -all from the build
+  classifier = 'standalone'
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'log4j-jndi-be-gone'
+                description = 
+                url = 'https://github.com/nccgroup/log4j-jndi-be-gone'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'chaosdata'
+                        name = 'Jeff Dileo'
+                        email = 'jeff.dileo@nccgroup.com'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/nccgroup/log4j-jndi-be-gone'
+                    connection = 'scm:git:git://github.com/nccgroup/log4j-jndi-be-gone.git'
+                    developerConnection = 'scm:git:ssh:git@github.com:nccgroup/log4j-jndi-be-gone.git'
+                }
+            }
+        }
+    }
+}
+
+defaultTasks "jar", "shadowJar", "publishToMavenLocal"

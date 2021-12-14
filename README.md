@@ -12,6 +12,13 @@ It does three things:
 * Resolves the format string to `"(log4j jndi disabled)"` in the log message
   (to prevent transitive injections).
 
+
+**Note**: _log4j-jndi-be-gone_ does not look at the original Log4J `JndiLookup` class name.
+Instead it utilizes [Classgraph](https://github.com/classgraph/classgraph) to find the culprit classes by
+looking at their internal structure. In particular, it searches for classes that contain a final static string field
+`static final String CONTAINER_JNDI_RESOURCE_PATH_PREFIX` and a `public String lookup(?, String)` method, that both present
+in the `JndiLookup` class. That enables support for obfuscated or shaded _Log4j_ libraries (e.g. fat-jars).
+
 # Usage
 
 Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` commands.
@@ -23,10 +30,18 @@ Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` 
 $ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar -jar path/to/some.jar
 ```
 
+You can also enable logging to have a list of intercepted classes.
+
+```
+$ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=logDir=/tmp/my/logs/ ...
+```
+
 # Obtaining log4j-jndi-be-gone
 
 You can build the JAR with `./gradlew` (`build/libs/log4j-jndi-be-gone-1.0.0(-standalone).jar`)
 or get it from the [releases page](https://github.com/nccgroup/log4j-jndi-be-gone/releases).
+
+The output JAR file is located in the `$PROJECT_HOME/build/libs/` directory.
 
 # Compatibility
 
@@ -34,8 +49,12 @@ The log4j-jndi-be-gone agent JAR supports Java 6-17+.
 
 # Caveats
 
-* log4j-jndi-be-gone will not work if the log4j library has been obfuscated or
-if its class packages/names have been modified.
+* log4j-jndi-be-gone might not work if the log4j library has been heavily obfuscated.
+
+
+* It might block calls to a benign `lookup` method if the declaring class internal 
+  structure happens to resemble the `JndiLookup` class. (See above).
+
 
 * `log4j-jndi-be-gone-1.0.0-standalone.jar` bundles in Byte Buddy. If you
   already use Byte Buddy, you may run into issues with it. Try

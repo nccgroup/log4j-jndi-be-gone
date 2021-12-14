@@ -3,7 +3,6 @@ package trust.nccgroup.jndibegone;
 import io.github.classgraph.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class JndiLookupClassFinder {
@@ -23,22 +22,22 @@ public class JndiLookupClassFinder {
       new ClassGraph()
         .ignoreFieldVisibility()
         .enableMethodInfo()
+        .enableClassInfo()
         .scan();
 
     try {
-      final List<Class<?>> culpritClasses =
+      final ClassInfoList JndiLookupIshClassInfos =
         scanResult
-          .getAllClasses()
+          .getAllStandardClasses()
           .filter(new ClassInfoList.ClassInfoFilter() {
             public boolean accept(ClassInfo ci) {
-              return isJndiLookupClass(ci);
+              return isJndiLookupIshClass(ci);
             }
-          })
-          .loadClasses(true);
+          });
 
       final Set<String> resultClassNameSet = new HashSet<String>();
-      for (Class<?> c : culpritClasses) {
-        final String className = c.getCanonicalName();
+      for (ClassInfo ci : JndiLookupIshClassInfos) {
+        final String className = ci.getName();
         resultClassNameSet.add(className);
         logger.log("Detected log4j JndiLookup class: " + className);
       }
@@ -49,9 +48,8 @@ public class JndiLookupClassFinder {
     }
   }
 
-  private static boolean isJndiLookupClass(ClassInfo ci) {
-    return ci.isStandardClass()
-      && !(ci.isSynthetic()
+  private static boolean isJndiLookupIshClass(ClassInfo ci) {
+    return !(ci.isSynthetic()
       || ci.isAbstract()
       || ci.isInnerClass()
       || ci.isArrayClass()

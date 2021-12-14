@@ -16,14 +16,33 @@ limitations under the License.
 
 package trust.nccgroup.jndibegone;
 
-import java.lang.instrument.Instrumentation;
 import trust.nccgroup.jndibegone.hooks.JndiLookup__lookup;
+
+import java.lang.instrument.Instrumentation;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class Agent {
 
-  public static void load(Instrumentation inst) {
-    JndiLookup__lookup.hook(inst);
+  public static final String OPTION_LOG_DIR = "logDir";
+
+  public static void load(String args, Instrumentation inst) {
+    final Map<String, String> options = new HashMap<String, String>();
+    for (String arg : args.split(",")) {
+      final int i = arg.indexOf("=");
+      final String key = i < 0 ? arg : arg.substring(0, i).trim();
+      final String value = i < 0 ? null : arg.substring(i + 1).trim();
+      options.put(key, value);
+    }
+
+    final String logDirPath = options.get(OPTION_LOG_DIR);
+    final Logger logger = new Logger(logDirPath);
+    final JndiLookupClassFinder classFinder = new JndiLookupClassFinder(logger);
+    final Set<String> lookupClassNames = classFinder.findJndiLookupClassNames();
+
+    new JndiLookup__lookup(lookupClassNames, logger).hook(inst);
   }
 
 }

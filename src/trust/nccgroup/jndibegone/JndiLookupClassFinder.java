@@ -8,17 +8,23 @@ import java.util.Set;
 
 public class JndiLookupClassFinder {
 
-  private static final String DEFAULT_JNDI_LOOKUP_CLASS_NAME = "org.apache.logging.log4j.core.lookup.JndiLookup";
   private static final String MARKER_FIELD_NAME = "CONTAINER_JNDI_RESOURCE_PATH_PREFIX";
   private static final String MARKER_METHOD_NAME = "lookup";
   private static final String STRING_TYPE = "java.lang.String";
 
-  public static Set<String> findJndiLookupClassNames() {
-    final ClassGraph classGraph = new ClassGraph()
-      .ignoreFieldVisibility()
-      .enableMethodInfo()
-      .enableClassInfo();
-    final ScanResult scanResult = classGraph.scan();
+  private final Logger logger;
+
+  public JndiLookupClassFinder(Logger logger) {
+    this.logger = logger;
+  }
+
+  public Set<String> findJndiLookupClassNames() {
+    final ScanResult scanResult =
+      new ClassGraph()
+        .ignoreFieldVisibility()
+        .enableMethodInfo()
+        .scan();
+
     try {
       final List<Class<?>> culpritClasses =
         scanResult
@@ -29,16 +35,15 @@ public class JndiLookupClassFinder {
             }
           })
           .loadClasses(true);
+
       final Set<String> resultClassNameSet = new HashSet<String>();
       for (Class<?> c : culpritClasses) {
         final String className = c.getCanonicalName();
         resultClassNameSet.add(className);
-        logInfo("Found Log4j2 JndiLookup class: " + className);
-        if (!DEFAULT_JNDI_LOOKUP_CLASS_NAME.equals(className)) {
-          logWarn("Found a class that looks like a renamed Log4j2 JndiLookup: " + className);
-        }
+        logger.log("Detected log4j JndiLookup class: " + className);
       }
       return resultClassNameSet;
+
     } finally {
       scanResult.close();
     }
@@ -83,18 +88,4 @@ public class JndiLookupClassFinder {
       return false;
     }
   }
-
-  private static void logWarn(String msg) {
-    doLog("[WARNING] " + msg);
-  }
-
-  private static void logInfo(String msg) {
-    doLog("[INFO] " + msg);
-  }
-
-  private static void doLog(String msg) {
-    System.out.println("[LOG4J_JNDI_BE_GONE]" + msg);
-    // todo: log to a file
-  }
-
 }

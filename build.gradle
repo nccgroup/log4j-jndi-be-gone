@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'trust.nccgroup'
-version = '1.0.0'
+version = '1.0.0-wajda'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
   implementation group: 'net.bytebuddy', name: 'byte-buddy', version: '[1.12.0, 1.13)'
+  implementation group: 'io.github.classgraph', name: 'classgraph', version: '[4.8.138]'
 }
 
 sourceSets {
@@ -74,7 +75,7 @@ publishing {
             from components.java
             pom {
                 name = 'log4j-jndi-be-gone'
-                description = 
+                description =
                 url = 'https://github.com/nccgroup/log4j-jndi-be-gone'
                 licenses {
                     license {

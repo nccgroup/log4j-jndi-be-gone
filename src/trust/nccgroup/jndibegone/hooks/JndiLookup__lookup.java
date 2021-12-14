@@ -16,7 +16,6 @@ limitations under the License.
 
 package trust.nccgroup.jndibegone.hooks;
 
-import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -27,10 +26,14 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.utility.JavaModule;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Set;
+
+import static trust.nccgroup.jndibegone.JndiLookupClassFinder.findJndiLookupClassNames;
 
 public class JndiLookup__lookup {
 
   private static final String TAG = "JndiLookup__lookup";
+  private static final Set<String> jndiLookupClassNames = findJndiLookupClassNames();
 
   @Advice.OnMethodEnter(inline = true, skipOn = Advice.OnNonDefaultValue.class)
   static String enter(@Advice.Argument(readOnly = true, value = 1) String key) {
@@ -54,7 +57,7 @@ public class JndiLookup__lookup {
     .ignore(ElementMatchers.none())
     .type(new ElementMatcher<TypeDescription>() {
       public boolean matches(TypeDescription target) {
-        return "org.apache.logging.log4j.core.lookup.JndiLookup".equals(target.getCanonicalName());
+        return jndiLookupClassNames.contains(target.getCanonicalName());
       }
     })
     .transform(new AgentBuilder.Transformer() {

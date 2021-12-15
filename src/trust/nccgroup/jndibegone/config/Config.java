@@ -81,14 +81,4 @@ public class Config {
   private static Pattern compilePattern(String pattern) {
     return pattern == null ? null : Pattern.compile(pattern);
   }
-
-  @Override
-  public String toString() {
-    return "Config{" +
-      "logDir='" + logDir + '\'' +
-      ", includeClassPattern=" + includeClassPattern +
-      ", excludeClassPattern=" + excludeClassPattern +
-      ", classSigMode=" + classSigMode +
-      '}';
-  }
 }

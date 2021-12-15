@@ -47,6 +47,9 @@ public class JndiLookup__lookup {
     return Advice.to(JndiLookup__lookup.class).on(ElementMatchers.named("lookup"));
   }
 
+  private static final String TARGET = "org.apache.logging.log4j.core.lookup.JndiLookup";
+  private static final String SUFFIX_TARGET = ".org.apache.logging.log4j.core.lookup.JndiLookup";
+
   public static void hook(Instrumentation inst) {
     new AgentBuilder.Default()
     .disableClassFormatChanges()
@@ -54,7 +57,15 @@ public class JndiLookup__lookup {
     .ignore(ElementMatchers.none())
     .type(new ElementMatcher<TypeDescription>() {
       public boolean matches(TypeDescription target) {
-        return "org.apache.logging.log4j.core.lookup.JndiLookup".equals(target.getCanonicalName());
+        if (target != null) {
+          String cn = target.getCanonicalName();
+          if (cn != null) {
+            if (cn.endsWith(TARGET)) {
+              return TARGET.equals(cn) || cn.endsWith(SUFFIX_TARGET);
+            }
+          }
+        }
+        return false;
       }
     })
     .transform(new AgentBuilder.Transformer() {

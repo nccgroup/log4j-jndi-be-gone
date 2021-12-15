@@ -24,7 +24,7 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
-import trust.nccgroup.jndibegone.Logger;
+import trust.nccgroup.jndibegone.logger.Logger;
 
 import java.lang.instrument.Instrumentation;
 

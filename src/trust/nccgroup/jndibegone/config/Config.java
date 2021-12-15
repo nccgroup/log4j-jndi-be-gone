@@ -1,4 +1,4 @@
-package trust.nccgroup.jndibegone;
+package trust.nccgroup.jndibegone.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,26 +6,31 @@ import java.util.regex.Pattern;
 
 public class Config {
   public static final String OPTION_LOG_DIR = "logDir";
+  public static final String OPTION_LOG_TO_STDERR = "logToStdErr";
   public static final String OPTION_INCLUDE_CLASS_PATTERN = "classPattern";
   public static final String OPTION_EXCLUDE_CLASS_PATTERN = "excludeClassPattern";
   public static final String OPTION_CLASS_SIGNATURE_MODE = "classSigDetection";
 
   public static final String DEFAULT_INCLUDE_CLASS_PATTERN = "org\\.apache\\.logging\\.log4j\\.core\\.lookup\\.JndiLookup";
   public static final String DEFAULT_EXCLUDE_CLASS_PATTERN = null;
+  public static final String DEFAULT_LOG_TO_STDERR = Boolean.TRUE.toString();
   public static final ClassSigMode DEFAULT_CLASS_SIG_MODE = ClassSigMode.DISABLED;
 
   public final String logDir;
-  public final Pattern includeClassPattern;
+  public final boolean logToStdErr;
   public final Pattern excludeClassPattern;
+  public final Pattern includeClassPattern;
   public final ClassSigMode classSigMode;
 
   private Config(
     String logDir,
+    boolean logToStdErr,
     Pattern includeClassPattern,
     Pattern excludeClassPattern,
     ClassSigMode classSigMode
   ) {
     this.logDir = logDir;
+    this.logToStdErr = logToStdErr;
     this.includeClassPattern = includeClassPattern;
     this.excludeClassPattern = excludeClassPattern;
     this.classSigMode = classSigMode;
@@ -43,6 +48,7 @@ public class Config {
     }
 
     final String logDir = trimToNull(options.get(OPTION_LOG_DIR));
+    final boolean logToStdErr = Boolean.parseBoolean(getOrDefault(options.get(OPTION_LOG_TO_STDERR), DEFAULT_LOG_TO_STDERR));
 
     final String csModeStr = trimToNull(options.get(OPTION_CLASS_SIGNATURE_MODE));
     final ClassSigMode csMode = csModeStr == null ? DEFAULT_CLASS_SIG_MODE : ClassSigMode.valueOf(csModeStr.toUpperCase());
@@ -52,6 +58,7 @@ public class Config {
 
     return new Config(
       logDir,
+      logToStdErr,
       inclPattern,
       exclPattern,
       csMode

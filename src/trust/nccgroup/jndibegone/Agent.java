@@ -18,7 +18,9 @@ package trust.nccgroup.jndibegone;
 
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import trust.nccgroup.jndibegone.config.Config;
 import trust.nccgroup.jndibegone.hooks.JndiLookup__lookup;
+import trust.nccgroup.jndibegone.logger.Logger;
 
 import java.lang.instrument.Instrumentation;
 
@@ -27,8 +29,13 @@ public class Agent {
 
   public static void load(String args, Instrumentation inst) {
     final Config config = Config.parse(args);
-    final Logger logger = new Logger(config.logDir);
-    final ElementMatcher<TypeDescription> typeMatcher = new JndiLookupClassMatcher(config);
+    final Logger logger = new Logger(config.logDir, config.logToStdErr);
+    final ElementMatcher<TypeDescription> typeMatcher = new JndiLookupClassMatcher(
+      config.excludeClassPattern,
+      config.includeClassPattern,
+      config.classSigMode,
+      logger
+    );
 
     new JndiLookup__lookup(typeMatcher, logger).hook(inst);
   }

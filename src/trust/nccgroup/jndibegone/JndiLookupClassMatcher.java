@@ -124,6 +124,7 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
    */
   private final static ElementMatcher<MethodDescription> JndiMethodMatcher = ElementMatchers
     .named("lookup")
+    .and(ElementMatchers.<MethodDescription>isPublic())
     .and(ElementMatchers.returns(String.class))
     .and(ElementMatchers.takesArguments(2))
     .and(ElementMatchers.takesArgument(0, LogEventTypeMatcher))

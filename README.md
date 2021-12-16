@@ -12,13 +12,6 @@ It does three things:
 * Resolves the format string to `"(log4j jndi disabled)"` in the log message
   (to prevent transitive injections).
 
-
-**Note**: _log4j-jndi-be-gone_ does not look at the original Log4J `JndiLookup` class name.
-Instead it utilizes [Classgraph](https://github.com/classgraph/classgraph) to find the culprit classes by
-looking at their internal structure. In particular, it searches for classes that contain a final static string field
-`static final String CONTAINER_JNDI_RESOURCE_PATH_PREFIX` and a `public String lookup(?, String)` method, that both present
-in the `JndiLookup` class. That enables support for obfuscated or shaded _Log4j_ libraries (e.g. fat-jars).
-
 # Usage
 
 Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` commands.
@@ -35,6 +28,15 @@ You can also enable logging to have a list of intercepted classes.
 ```
 $ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=logDir=/tmp/my/logs/ ...
 ```
+
+Detection of shaded log4j is disabled by default, it can be enabled like this:
+
+```
+$ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=classSigDetection=ENABLED ...
+```
+
+There is also option to `LOG_ONLY`. The detection is done by using combination of several elements 
+that are present in every version of `JndiLookup` class affected by CVE-2021-44228 (2.0-beta9 to 2.14.1)
 
 # Obtaining log4j-jndi-be-gone
 
@@ -146,4 +148,3 @@ OK (1 test)
 # License
 
 Licensed under the Apache 2 license.
-

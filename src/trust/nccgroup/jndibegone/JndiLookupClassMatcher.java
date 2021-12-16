@@ -1,7 +1,11 @@
 package trust.nccgroup.jndibegone;
 
+import net.bytebuddy.description.annotation.AnnotationDescription;
+import net.bytebuddy.description.field.FieldDescription;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.matcher.ElementMatchers;
 import trust.nccgroup.jndibegone.config.ClassSigMode;
 import trust.nccgroup.jndibegone.logger.Logger;
 
@@ -54,8 +58,69 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
     return false;
   }
 
-  private static boolean isMatchBySignature(TypeDescription target) {
-    // TODO: implement it
-    throw new UnsupportedOperationException("not implemented");
+  private static boolean isMatchBySignature(TypeDescription td) {
+    return hasJndiLookupName(td) && hasPluginAnnotation(td) && hasJndiField(td) && hasLookupMethod(td);
   }
+
+  private static boolean hasJndiLookupName(TypeDescription target) {
+    return "JndiLookup".equals(target.getSimpleName());
+  }
+
+  private static boolean hasPluginAnnotation(TypeDescription target) {
+    return !target.getDeclaredAnnotations().filter(JndiAnnotationMatcher).isEmpty();
+  }
+
+  private static boolean hasJndiField(TypeDescription target) {
+    return !target.getDeclaredFields().filter(JndiFieldMatcher).isEmpty();
+  }
+
+  private static boolean hasLookupMethod(TypeDescription target) {
+    return !target.getDeclaredMethods().filter(JndiMethodMatcher).isEmpty();
+  }
+
+  /*
+   * matching on the annotation:
+   * @Plugin(name = "jndi", category = "Lookup")
+   */
+  private final static ElementMatcher<AnnotationDescription> JndiAnnotationMatcher = new ElementMatcher<AnnotationDescription>() {
+    @Override
+    public boolean matches(AnnotationDescription ad) {
+      return "Plugin".equals(ad.getAnnotationType().getSimpleName()) &&
+        "jndi".equals(ad.getValue("name").resolve()) &&
+        "Lookup".equals(ad.getValue("category").resolve());
+    }
+  };
+
+  /*
+   * matching on the field:
+   * static final String CONTAINER_JNDI_RESOURCE_PATH_PREFIX = "java:comp/env/";
+   */
+  private final static ElementMatcher<FieldDescription> JndiFieldMatcher = new ElementMatcher<FieldDescription>() {
+    @Override
+    public boolean matches(FieldDescription fd) {
+      return "CONTAINER_JNDI_RESOURCE_PATH_PREFIX".equals(fd.getName()) &&
+        fd.getType().represents(String.class) &&
+        fd.isStatic() &&
+        fd.isFinal();
+    }
+  };
+
+  private final static ElementMatcher<TypeDescription> LogEventTypeMatcher = new ElementMatcher<TypeDescription>() {
+    @Override
+    public boolean matches(TypeDescription td) {
+      return "LogEvent".equals(td.getSimpleName());
+    }
+  };
+
+  /*
+   * matching on the method:
+   * public String lookup(final LogEvent event, final String key)
+   */
+  private final static ElementMatcher<MethodDescription> JndiMethodMatcher = ElementMatchers
+    .named("lookup")
+    .and(ElementMatchers.returns(String.class))
+    .and(ElementMatchers.takesArguments(2))
+    .and(ElementMatchers.takesArgument(0, LogEventTypeMatcher))
+    .and(ElementMatchers.takesArgument(1, String.class));
+
 }

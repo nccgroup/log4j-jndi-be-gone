@@ -12,6 +12,20 @@ It does three things:
 * Resolves the format string to `"(log4j jndi disabled)"` in the log message
   (to prevent transitive injections).
 
+### `JndiLookup` class detection algorithm
+1. The class names matching the **classPattern** are considered a match and their `lookup` methods are blocked.
+2. Otherwise, if the **classSigDetection** option is enabled the agent blocks the classes that meet all following criteria:
+* The simple class name is `JndiLookup`, and
+* The class is annotated with `@Plugin(name = "jndi", category = "Lookup")`, and
+* The class has a field `static final String CONTAINER_JNDI_RESOURCE_PATH_PREFIX`, and
+* The class has a public method `lookup` that returns a string and takes two parameters, the 1st one of a type with a simple name `LogEvent`
+  and the 2nd one is of type string.
+3. If the **classSigDetection** is set to _LOG_ONLY_, then the classes matched by signature aren't blocked, but the fact of match is logged.
+4. The classes matching **excludeClassPattern** are never blocked. This could be useful, for example, if **classSigDetection** option is enabled,
+   but there is a known benign class in some library whose name and the signature accidentally match the `JndiLookup` class signature described above,
+   and we don't want that class to be blocked.
+
+
 # Usage
 
 Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` commands.
@@ -23,21 +37,59 @@ Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` 
 $ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar -jar path/to/some.jar
 ```
 
-You can also enable logging to have a list of intercepted classes.
+The agent could also be enabled for all Java processes system-wide. For example, by replacing the `java` binary with the following script: 
 
-```
-$ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=logDir=/tmp/my/logs/ ...
+```shell
+#!/bin/bash 
+$(dirname "$0")/java.original "--javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar" "$@"
 ```
 
-Detection of shaded log4j is disabled by default, it can be enabled like this:
+all new Java processes will automatically be guarded by the agent.  
+
+### Shaded JARs
+
+Detection of *shaded log4j* is disabled by default, but it can be enabled like this:
 
 ```
 $ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=classSigDetection=ENABLED ...
 ```
 
-There is also option to `LOG_ONLY`. The detection is done by using combination of several elements 
-that are present in every version of `JndiLookup` class affected by CVE-2021-44228 (2.0-beta9 to 2.14.1)
+The detection is done by using combination of several anchors (see above) 
+that are present in all versions of `JndiLookup` class affected by CVE-2021-44228 (2.0-beta9 to 2.14.1)
 
+
+### Logging
+
+**Note**: the agent **do not** use log4j for logging.
+
+By default, the logs are written to the standard error stream.
+
+The logs include the following information:
+- Intercepted class names
+- Classes that look like a shaded `JndiLookup`
+- Events of blocked `lookup` method calls
+
+The logs can optionally be stored in files in a specified directory. 
+
+```
+$ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=logDir=/tmp/my/logs/ ...
+```
+
+The files are created per jvm process, and contain the JVM PID in the name.
+It could be useful to find a corresponding Java application if the agent is installed system-wide.
+
+# Configuration
+
+The agent can take the following options:
+
+|Option Name| Type                      | Default Value                                               | Description                                                                                                                  |
+|---|---------------------------|-------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+|**logToStdErr**        | boolean                   | TRUE                                                        | If logs should be written to stderr                                                                                          |
+|**logDir**             | path                      | _(empty)_                                                   | If specified, the logs will also be written to the given directory. If empty, no logs are written to the disk.               |
+|**classPattern**       | regular expression        | org\\.apache\\.logging\\.log4j\\.core\\.lookup\\.JndiLookup | Fully qualified class names to block                                                                                         |
+|**excludeClassPattern**| regular expression        | _(empty)_                                                   | Fully qualified class names that should never be blocked                                                                     |
+|**classSigDetection**  | ENABLED DISABLED LOG_ONLY | DISABLED                                                    | Should the `JndiLookup` detection be attempted by examining the class signature **(required for shaded JARs support)** |
+| |                           |                                                             |
 # Obtaining log4j-jndi-be-gone
 
 You can build the JAR with `./gradlew` (`build/libs/log4j-jndi-be-gone-1.0.0(-standalone).jar`)
@@ -51,7 +103,7 @@ The log4j-jndi-be-gone agent JAR supports Java 6-17+.
 
 # Caveats
 
-* log4j-jndi-be-gone might not work if the log4j library has been heavily obfuscated.
+* log4j-jndi-be-gone might not work if the log4j library has been obfuscated.
 
 
 * It might block calls to a benign `lookup` method if the declaring class internal 

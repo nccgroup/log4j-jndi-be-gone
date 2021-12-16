@@ -26,7 +26,10 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
   }
 
   public boolean matches(TypeDescription target) {
+    if (target == null) return false;
+
     final String fqn = target.getCanonicalName();
+    if (fqn == null) return false;
 
     if (excludeClassPattern != null && excludeClassPattern.matcher(fqn).matches()) {
       // The given class is benign and has to be skipped.
@@ -85,7 +88,8 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
   private final static ElementMatcher<AnnotationDescription> JndiAnnotationMatcher = new ElementMatcher<AnnotationDescription>() {
     @Override
     public boolean matches(AnnotationDescription ad) {
-      return "Plugin".equals(ad.getAnnotationType().getSimpleName()) &&
+      return ad != null &&
+        "Plugin".equals(ad.getAnnotationType().getSimpleName()) &&
         "jndi".equals(ad.getValue("name").resolve()) &&
         "Lookup".equals(ad.getValue("category").resolve());
     }
@@ -98,7 +102,8 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
   private final static ElementMatcher<FieldDescription> JndiFieldMatcher = new ElementMatcher<FieldDescription>() {
     @Override
     public boolean matches(FieldDescription fd) {
-      return "CONTAINER_JNDI_RESOURCE_PATH_PREFIX".equals(fd.getName()) &&
+      return fd != null &&
+        "CONTAINER_JNDI_RESOURCE_PATH_PREFIX".equals(fd.getName()) &&
         fd.getType().represents(String.class) &&
         fd.isStatic() &&
         fd.isFinal();
@@ -108,7 +113,8 @@ public class JndiLookupClassMatcher implements ElementMatcher<TypeDescription> {
   private final static ElementMatcher<TypeDescription> LogEventTypeMatcher = new ElementMatcher<TypeDescription>() {
     @Override
     public boolean matches(TypeDescription td) {
-      return "LogEvent".equals(td.getSimpleName());
+      return td != null &&
+        "LogEvent".equals(td.getSimpleName());
     }
   };
 

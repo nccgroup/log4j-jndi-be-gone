@@ -13,6 +13,8 @@ done
 SCRIPTDIR=`pwd -P`
 cd "${SCRIPTDIR}"
 
+set -e
+
 cd ../../
 ./gradlew
 cd "${SCRIPTDIR}"

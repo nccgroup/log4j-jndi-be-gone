@@ -23,7 +23,8 @@ import trust.nccgroup.jndibegone.hooks.JndiLookup__lookup;
 public class Agent {
 
   public static void load(Instrumentation inst) {
-    JndiLookup__lookup.hook(inst);
+    //JndiLookup__lookup.hook(inst);
+    JndiLookup__lookup.hook_deep_match(inst);
   }
 
 }

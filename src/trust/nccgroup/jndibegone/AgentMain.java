@@ -23,7 +23,7 @@ import trust.nccgroup.jndibegone.Agent;
 public class AgentMain {
 
   public static void agentmain(String args, Instrumentation inst) {
-    Agent.load(inst);
+    Agent.load(args, inst);
   }
 
 }

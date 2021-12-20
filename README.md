@@ -23,6 +23,21 @@ Add `-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar` to your `java` 
 $ java -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar -jar path/to/some.jar
 ```
 
+As of version 1.1.0, log4j-jndi-be-gone defaults to attempting to handle
+repackaged (aka "shaded") versions of log4j that may be embedded in a JAR under
+an alternate package name to prevent collisions between an application's
+version of a depdencency and a depdendency's version of the same depdendency.
+
+This can be disabled by placing `=structureMatch=0` after the agent JAR path
+in the `-javaagent:` argument, e.g.:
+
+```
+-javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=structureMatch=0
+```
+
+This will result in the same matching behavior as 1.0.0, a simple exact string
+comparison against the class name.
+
 # Obtaining log4j-jndi-be-gone
 
 You can build the JAR with `./gradlew` (`build/libs/log4j-jndi-be-gone-1.0.0(-standalone).jar`)
@@ -32,15 +47,46 @@ or get it from the [releases page](https://github.com/nccgroup/log4j-jndi-be-gon
 
 The log4j-jndi-be-gone agent JAR supports Java 6-17+.
 
+## Class Matching
+
+The implementation starts by matching against classes with suffixes that match
+the innermost sub-packages and classname of
+`org.apache.logging.log4j.core.lookup.JndiLookup`,
+`lookup.JndiLookup`, as `org.apache.logging.log4j.core` can reasonably be
+expected to have been mangled by repackaging rules that did not seek to
+preserve package names. Additionally, instead of just performing similar checks
+for all other expected log4j types, it ensures that they exist under the same
+base package as well.
+
+The implementation then walks through the structure of any identified potential
+log4j `lookup.JndiLookup` classes, attempting to validate against:
+
+* the modifiers on the class itself
+* the class' parent class and/or implemented interfaces (these differ between
+  log4j versions)
+* the `org.apache.logging.log4j.core.config.plugins.Plugin` annotation expected
+  across all 2.x versions, including annotation parameters and their values
+* the method `lookup()`, matching against its modifiers and type signature
+  (and ignoring the 1-argument version from 2.0)
+* the method `convertJndiName()`, matching against its modifiers and type signature
+* the field `CONTAINER_JNDI_RESOURCE_PATH_PREFIX`, matching against its modifiers
+
 # Caveats
 
 * log4j-jndi-be-gone will not work if the log4j library has been obfuscated or
-if its class packages/names have been modified.
+if its class packages/names have been modified other than basic re-packaging
+(i.e. "shading").
+    * FWIW, log4j 2.x is pretty inflexible with regards to being repackaged, so
+      it's unclear how common such practices are.
 
 * `log4j-jndi-be-gone-1.0.0-standalone.jar` bundles in Byte Buddy. If you
   already use Byte Buddy, you may run into issues with it. Try
   `log4j-jndi-be-gone-1.0.0.jar` instead, though note that log4j-jndi-be-gone
   expects Byte Buddy 1.12.x.
+
+* If you have replaced your `JndiLookup` classes with implementations that
+  attempt to do honeypotting or log `lookup()` calls, log4j-jndi-be-gone will
+  potentially disable their `lookup` method, preventing them from working.
 
 # Example
 
@@ -127,4 +173,42 @@ OK (1 test)
 # License
 
 Licensed under the Apache 2 license.
+
+# Log4j Versions Tested
+
+* 2.0
+* 2.0.1
+* 2.0.2
+* 2.1
+* 2.2
+* 2.3
+* 2.4
+* 2.4.1
+* 2.5
+* 2.6
+* 2.6.1
+* 2.6.2
+* 2.7
+* 2.8
+* 2.8.1
+* 2.8.2
+* 2.9.0
+* 2.9.1
+* 2.10.0
+* 2.11.0
+* 2.11.1
+* 2.11.2
+* 2.12.0
+* 2.12.1
+* 2.12.2
+* 2.13.0
+* 2.13.1
+* 2.13.2
+* 2.13.3
+* 2.14.0
+* 2.14.1
+* 2.15.0
+* 2.16.0
+* 2.17.0
+
 

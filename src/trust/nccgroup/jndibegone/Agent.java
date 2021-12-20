@@ -19,12 +19,45 @@ package trust.nccgroup.jndibegone;
 import java.lang.instrument.Instrumentation;
 import trust.nccgroup.jndibegone.hooks.JndiLookup__lookup;
 
+import java.util.HashMap;
+
 @SuppressWarnings("unused")
 public class Agent {
 
-  public static void load(Instrumentation inst) {
-    //JndiLookup__lookup.hook(inst);
-    JndiLookup__lookup.hook_deep_match(inst);
+  public static void load(String _args, Instrumentation inst) {
+    boolean deep_match = true;
+
+    HashMap<String,String> args = new HashMap<String,String>();
+    if (_args != null && !"".equals(_args)) {
+      String[] pairs = _args.split("&");
+      for (String pair : pairs) {
+        int epos = pair.indexOf("=");
+        if (epos == -1) {
+          System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
+          continue;
+        }
+        String k = pair.substring(0, epos);
+        String v = pair.substring(epos+1, pair.length());
+        if (v.indexOf("=") != -1) {
+          System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
+          continue;
+        }
+        args.put(k, v);
+      }
+
+      String structureMatch = args.getOrDefault("structureMatch", "1");
+      if ("0".equals(structureMatch)) {
+        deep_match = false;
+      } else if (!"1".equals(structureMatch)) {
+        System.err.println("[log4j-jndi-be-gone] ignoring invalid structureMatch argument: " + structureMatch);
+      }
+    }
+
+    if (deep_match) {
+      JndiLookup__lookup.hook_deep_match(inst);
+    } else {
+      JndiLookup__lookup.hook(inst);
+    }
   }
 
 }

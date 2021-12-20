@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'trust.nccgroup'
-version = '1.0.0'
+version = '1.1.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -65,6 +65,8 @@ artifacts {
 shadowJar {
   // removes -all from the build
   classifier = 'standalone'
+  //classifier = ''
+  //relocate 'net.bytebuddy', 'trust.nccgroup.jndibegone.vendor.net.bytebuddy'
 }
 
 
@@ -72,6 +74,9 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+        //shadow(MavenPublication) { publication ->
+            //project.shadow.component(publication)
+
             pom {
                 name = 'log4j-jndi-be-gone'
                 description = 

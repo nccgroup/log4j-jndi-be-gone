@@ -14,16 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package trust.nccgroup.jndibegone;
+package trust.nccgroup.jnditest;
 
-import java.lang.instrument.Instrumentation;
-import trust.nccgroup.jndibegone.Agent;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import trust.nccgroup.jnditest.test.*;
 
-@SuppressWarnings("unused")
-public class AgentMain {
-
-  public static void agentmain(String args, Instrumentation inst) {
-    Agent.load(args, inst);
-  }
-
-}
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+  JndiTest.class,
+})
+public class RunAllTests {}

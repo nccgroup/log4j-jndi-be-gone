@@ -24,6 +24,6 @@ import java.lang.instrument.Instrumentation;
 public class PreMain {
 
   public static void premain(String args, Instrumentation inst) {
-    Agent.load(inst);
+    Agent.load(args, inst);
   }
 }

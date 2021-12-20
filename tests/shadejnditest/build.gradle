@@ -23,6 +23,7 @@ repositories {
 dependencies {
   implementation group: 'trust.nccgroup', name: 'log4j-jndi-be-gone', version: '1.1.0'
 
+  /*
   if (project.hasProperty('log4j')) {
     testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: project.property('log4j')
     testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: project.property('log4j')
@@ -32,7 +33,7 @@ dependencies {
   } else {
     testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
     testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
-  }
+  }*/
 
   testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
@@ -80,10 +81,6 @@ task testJar(type: ShadowJar) {
   classifier = 'tests'
   from sourceSets.test.output
   configurations = [project.configurations.testRuntimeClasspath]
-
-  if (project.hasProperty('log4jpkg')) {
-    relocate 'org.apache.logging.log4j.core', project.property('log4jpkg')
-  }
 
   dependencies {
     exclude(dependency('net.bytebuddy:byte-buddy'))

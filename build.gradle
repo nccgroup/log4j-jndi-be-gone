@@ -64,7 +64,7 @@ artifacts {
 shadowJar {
     // removes -all from the build
     classifier = 'standalone'
-    relocate 'net.bytebuddy', 'log4jjndibegone.bytebuddy'
+    relocate 'net.bytebuddy', 'trust.nccgroup.jndibegone.bytebuddy'
 }
 
 publishing {

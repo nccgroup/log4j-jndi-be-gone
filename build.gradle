@@ -1,7 +1,7 @@
 plugins {
-  id 'com.github.johnrengelman.shadow' version '7.1.0'
-  id 'java'
-  id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'java'
+    id 'maven-publish'
 }
 
 group = 'trust.nccgroup'
@@ -11,62 +11,61 @@ sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  implementation group: 'net.bytebuddy', name: 'byte-buddy', version: '[1.12.0, 1.13)'
+    implementation group: 'net.bytebuddy', name: 'byte-buddy', version: '[1.12.0, 1.13)'
 }
 
 sourceSets {
-  main {
-    java {
-      srcDirs = ['./src']
-    }
+    main {
+        java {
+            srcDirs = ['./src']
+        }
 
-    resources {
-      srcDirs = ['./res']
+        resources {
+            srcDirs = ['./res']
+        }
     }
-  }
 }
 
 jar {
-  manifest {
-    attributes (
-      "Manifest-Version": "1.0",
-      "Can-Redefine-Classes": "true",
-      "Can-Retransform-Classes": "true",
-      "Can-Set-Native-Method-Prefix": "true",
-      "Premain-Class": "trust.nccgroup.jndibegone.PreMain",
-      "Agent-Class": "trust.nccgroup.jndibegone.AgentMain"
-    )
-  }
+    manifest {
+        attributes(
+            "Manifest-Version": "1.0",
+            "Can-Redefine-Classes": "true",
+            "Can-Retransform-Classes": "true",
+            "Can-Set-Native-Method-Prefix": "true",
+            "Premain-Class": "trust.nccgroup.jndibegone.PreMain",
+            "Agent-Class": "trust.nccgroup.jndibegone.AgentMain"
+        )
+    }
 }
 
-
 compileJava {
-  options.compilerArgs << '-Xlint:unchecked'
+    options.compilerArgs << '-Xlint:unchecked'
 }
 
 task sourceJar(type: Jar) {
-  from sourceSets.main.allJava
-  classifier = 'sources'
+    from sourceSets.main.allJava
+    classifier = 'sources'
 }
 
 task javadocJar(type: Jar) {
-  from javadoc
-  classifier = 'javadoc'
+    from javadoc
+    classifier = 'javadoc'
 }
 
 artifacts {
-  archives javadocJar, sourceJar
+    archives javadocJar, sourceJar
 }
 
 shadowJar {
-  // removes -all from the build
-  classifier = 'standalone'
+    // removes -all from the build
+    classifier = 'standalone'
+    relocate 'net.bytebuddy', 'log4jjndibegone.bytebuddy'
 }
-
 
 publishing {
     publications {
@@ -74,8 +73,8 @@ publishing {
             from components.java
             pom {
                 name = 'log4j-jndi-be-gone'
-                description = 
-                url = 'https://github.com/nccgroup/log4j-jndi-be-gone'
+                description =
+                    url = 'https://github.com/nccgroup/log4j-jndi-be-gone'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'

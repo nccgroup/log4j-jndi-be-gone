@@ -2,6 +2,7 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '7.1.0'
   id 'java'
   id 'maven-publish'
+  id 'nebula.rpm' version '8.4.1'
 }
 
 group = 'trust.nccgroup'
@@ -17,6 +18,7 @@ repositories {
 dependencies {
   implementation group: 'net.bytebuddy', name: 'byte-buddy', version: '[1.12.0, 1.13)'
 }
+
 
 sourceSets {
   main {
@@ -69,7 +71,6 @@ shadowJar {
   relocate 'net.bytebuddy', 'trust.nccgroup.jndibegone.vendor.net.bytebuddy'
 }
 
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -102,6 +103,106 @@ publishing {
             }
         }
     }
+}
+
+project.ext { 
+	packageName = "jndibegone"
+}
+
+assert project.ext.packageName == "jndibegone"
+
+task simpleRpm (type: Rpm) {
+	dependsOn jar
+	
+	project.ext {
+		packageSuffix = ''
+		deliverable = "${project.name}-${project.version}${project.ext.packageSuffix}.jar"
+	}
+
+	assert project.ext.packageSuffix == ''
+	assert project.ext.deliverable == "${project.name}-${project.version}${project.ext.packageSuffix}.jar"
+
+  packageName "${project.ext.packageName}${project.ext.packageSuffix}"
+  version 
+  release '1'
+  arch 'noarch'
+  os LINUX
+		
+  postInstall file('scripts/rpm/postinstall.sh')
+  postUninstall file('scripts/rpm/postremove.sh')
+
+  from(jar.outputs.files) {
+    addParentDirs = false
+    into '/opt/jndibegone'
+    include "${project.ext.deliverable}"
+  }
+
+  from('.') {
+		addParentDirs = false
+		into '/opt/jndibegone'
+		include 'AUTHORS'
+		include 'LICENSE'
+		include 'README.md'  
+  }
+
+  from('scripts/conf/jndibegone.sh') {
+    addParentDirs = false
+    into '/etc/profile.d'
+    expand(deliverable: "${project.ext.deliverable}")
+  }
+
+  from('scripts/conf/jndibegone.conf') {
+    addParentDirs = false
+    into '/etc/systemd/system/system.conf.d'
+    expand(deliverable: "${project.ext.deliverable}")
+  }
+  
+}
+
+task shadowRpm (type: Rpm) {
+	dependsOn shadowJar
+	project.ext {
+		packageSuffix = "-standalone"
+		deliverable = "${project.name}-${project.version}${project.ext.packageSuffix}.jar"
+	}
+	
+	assert project.ext.packageSuffix == "-standalone"
+	assert project.ext.deliverable == "${project.name}-${project.version}${project.ext.packageSuffix}.jar"
+
+  packageName "${project.ext.packageName}${project.ext.packageSuffix}"
+  version 
+  release '1'
+  arch 'noarch'
+  os LINUX
+		
+  postInstall file('scripts/rpm/postinstall.sh')
+  postUninstall file('scripts/rpm/postremove.sh')
+
+  from(shadowJar.outputs.files) {
+    addParentDirs = false
+    into '/opt/jndibegone'
+    include "${project.ext.deliverable}"
+  }
+
+  from('.') {
+		addParentDirs = false
+		into '/opt/jndibegone'
+		include 'AUTHORS'
+		include 'LICENSE'
+		include 'README.md'  
+  }
+  
+  from('scripts/conf/jndibegone.sh') {
+    addParentDirs = false
+    into '/etc/profile.d'
+    expand(deliverable: "${project.ext.deliverable}")
+  }
+
+  from('scripts/conf/jndibegone.conf') {
+    addParentDirs = false
+    into '/etc/systemd/system/system.conf.d'
+    expand(deliverable: "${project.ext.deliverable}")
+  }
 }
 
 defaultTasks "jar", "shadowJar", "publishToMavenLocal"

@@ -27,15 +27,18 @@ As of version 1.1.0, log4j-jndi-be-gone defaults to attempting to handle
 repackaged (aka "shaded") versions of log4j that may be embedded in a JAR under
 an alternate package name to prevent collisions between an application's
 version of a depdencency and a depdendency's version of the same depdendency.
+However, it should be noted that log4j seems not to easily be repckaged under
+alternate package names/prefixes due to the use of reflection with static
+classnames and/or classnames from embedded configuration files.
 
-This can be disabled by placing `=structureMatch=0` after the agent JAR path
+This behavior can be disabled by placing `=structureMatch=0` after the agent JAR path
 in the `-javaagent:` argument, e.g.:
 
 ```
 -javaagent:path/to/log4j-jndi-be-gone-1.0.0-standalone.jar=structureMatch=0
 ```
 
-This will result in the same matching behavior as 1.0.0, a simple exact string
+which will result in the same matching behavior as 1.0.0, a simple exact string
 comparison against the class name.
 
 # Obtaining log4j-jndi-be-gone
@@ -79,10 +82,12 @@ if its class packages/names have been modified other than basic re-packaging
     * FWIW, log4j 2.x is pretty inflexible with regards to being repackaged, so
       it's unclear how common such practices are.
 
-* `log4j-jndi-be-gone-1.0.0-standalone.jar` bundles in Byte Buddy. If you
+* `log4j-jndi-be-gone-1.0.0-standalone.jar` bundles in Byte Buddy. ~~If you
   already use Byte Buddy, you may run into issues with it. Try
   `log4j-jndi-be-gone-1.0.0.jar` instead, though note that log4j-jndi-be-gone
-  expects Byte Buddy 1.12.x.
+  expects Byte Buddy 1.12.x.~~ As of version 1.1.0, the log4j-jndi-be-gone
+  standalone JAR bundles a repackaged Byte Buddy under its own package prefix.
+  This should prevent any collisions.
 
 * If you have replaced your `JndiLookup` classes with implementations that
   attempt to do honeypotting or log `lookup()` calls, log4j-jndi-be-gone will
@@ -174,7 +179,13 @@ OK (1 test)
 
 Licensed under the Apache 2 license.
 
-# Log4j Versions Tested
+# Compatability
+
+## Java Versions Tested
+
+log4j-jndi-be-gone has been tested on OpenJDK 6, 8, 11, and 17, and on the HotSpot and OpenJ9 JVMs.
+
+## Log4j Versions Tested
 
 * 2.0
 * 2.0.1
@@ -210,5 +221,3 @@ Licensed under the Apache 2 license.
 * 2.15.0
 * 2.16.0
 * 2.17.0
-
-

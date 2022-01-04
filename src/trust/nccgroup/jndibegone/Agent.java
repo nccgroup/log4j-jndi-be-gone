@@ -27,37 +27,46 @@ public class Agent {
   public static void load(String _args, Instrumentation inst) {
     boolean deep_match = true;
 
-    HashMap<String,String> args = new HashMap<String,String>();
-    if (_args != null && !"".equals(_args)) {
-      String[] pairs = _args.split("&");
-      for (String pair : pairs) {
-        int epos = pair.indexOf("=");
-        if (epos == -1) {
-          System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
-          continue;
+    try {
+      HashMap<String,String> args = new HashMap<String,String>();
+      if (_args != null && !"".equals(_args)) {
+        String[] pairs = _args.split("&");
+        for (String pair : pairs) {
+          int epos = pair.indexOf("=");
+          if (epos == -1) {
+            System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
+            continue;
+          }
+          String k = pair.substring(0, epos);
+          String v = pair.substring(epos+1, pair.length());
+          if (v.indexOf("=") != -1) {
+            System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
+            continue;
+          }
+          args.put(k, v);
         }
-        String k = pair.substring(0, epos);
-        String v = pair.substring(epos+1, pair.length());
-        if (v.indexOf("=") != -1) {
-          System.err.println("[log4j-jndi-be-gone] ignoring invalid agent argument: " + pair);
-          continue;
+
+        String structureMatch = null;
+        if (args.containsKey("structureMatch")) {
+          structureMatch = args.get("structureMatch");
+        } else {
+          structureMatch = "1";
         }
-        args.put(k, v);
+        if ("0".equals(structureMatch)) {
+          deep_match = false;
+        } else if (!"1".equals(structureMatch)) {
+          System.err.println("[log4j-jndi-be-gone] ignoring invalid structureMatch argument: " + structureMatch);
+        }
       }
 
-      String structureMatch = args.getOrDefault("structureMatch", "1");
-      if ("0".equals(structureMatch)) {
-        deep_match = false;
-      } else if (!"1".equals(structureMatch)) {
-        System.err.println("[log4j-jndi-be-gone] ignoring invalid structureMatch argument: " + structureMatch);
+      if (deep_match) {
+        JndiLookup__lookup.hook_deep_match(inst);
+      } else {
+        JndiLookup__lookup.hook(inst);
       }
-    }
-
-    if (deep_match) {
-      JndiLookup__lookup.hook_deep_match(inst);
-    } else {
-      JndiLookup__lookup.hook(inst);
+    } catch (Throwable t) {
+      System.err.println("[log4j-jndi-be-gone] Exception raised in agent.");
+      t.printStackTrace();
     }
   }
-
 }

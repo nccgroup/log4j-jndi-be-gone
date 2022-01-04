@@ -87,6 +87,7 @@ task testJar(type: ShadowJar) {
 
   dependencies {
     exclude(dependency('net.bytebuddy:byte-buddy'))
+    exclude(dependency('trust.nccgroup:log4j-jndi-be-gone'))
   }
 
   manifest {

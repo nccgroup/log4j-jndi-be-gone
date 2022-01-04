@@ -90,6 +90,7 @@ public class JndiLookup__lookup {
     .transform(new AgentBuilder.Transformer() {
       public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription td, ClassLoader cl, JavaModule mod) {
         try {
+          //System.out.println("[log4j-jndi-be-gone] class found!: " + td);
           return builder.visit(JndiLookup__lookup.getVisitor());
         } catch (Throwable t) {
           t.printStackTrace();
@@ -135,6 +136,7 @@ public class JndiLookup__lookup {
     .transform(new AgentBuilder.Transformer() {
       public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription td, ClassLoader cl, JavaModule mod) {
         try {
+          //System.out.println("[log4j-jndi-be-gone] class found!: " + td);
           return builder.visit(JndiLookup__lookup.getVisitor());
         } catch (Throwable t) {
           t.printStackTrace();

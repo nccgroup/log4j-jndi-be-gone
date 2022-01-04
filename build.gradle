@@ -66,7 +66,7 @@ shadowJar {
   // removes -all from the build
   classifier = 'standalone'
   //classifier = ''
-  //relocate 'net.bytebuddy', 'trust.nccgroup.jndibegone.vendor.net.bytebuddy'
+  relocate 'net.bytebuddy', 'trust.nccgroup.jndibegone.vendor.net.bytebuddy'
 }
 
 
